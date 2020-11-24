@@ -1,0 +1,54 @@
+module sobel_tb;
+   
+   integer fd_in, fd_out;
+   integer rc;
+   integer ii, jj;
+   
+   reg [7:0] data[0:99][0:99];
+   integer   result[0:99][0:99];
+
+   reg [23:0] row1;
+   reg [23:0] row2;
+   reg [23:0] row3;
+   integer    pixel_result;
+   
+   initial begin
+      
+      fd_in = $fopen("bicho.bin", "rb");
+      rc = $fread(data, fd_in);
+      $fclose(fd_in);
+
+      for (ii = 0; ii < 100; ii = ii + 1)
+	for (jj = 0; jj < 100; jj = jj + 1)
+	  begin
+	     if (ii != 0 && ii != 99 && 
+	         jj != 0 && jj != 99)
+	       begin
+		  #1 row1[23:16] = data[ii-1][jj-1]; 
+		  #1 row1[15:8] = data[ii-1][jj];
+		  #1 row1[7:0] = data[ii-1][jj+1];
+		  
+		  #1 row2[23:16] = data[ii][jj-1];
+	  	  #1 row2[15:8] = data[ii][jj]; 
+		  #1 row2[7:0] = data[ii][jj+1];
+		  
+		  #1 row2[23:16] = data[ii+1][jj-1];
+	  	  #1 row2[15:8] = data[ii+1][jj]; 
+		  #1 row2[7:0] = data[ii+1][jj+1];
+		  
+		  #100 sobel(row1, row2, row3, pixel_result);
+
+		  #1 result[ii][jj] = pixel_result;
+	       end
+	  end
+  
+      fd_out = $fopen("sobel.bin", "wb");
+
+      for (ii = 0; ii < 100; ii = ii + 1)
+	for (jj = 0; jj < 100; jj = jj + 1)
+	  $fwrite(fd_out, "%u", data[ii][jj] );
+      
+      $fclose(fd_out);
+      
+   end
+endmodule
